@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>族谱管理系统 - Pure Genealogy</title>
+    <!-- 使用 ECharts 5 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        /* 全局样式 & 重置 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f5f7fa;
+            color: #1e293b;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            padding: 24px 28px 32px;
+        }
+        /* 头部 */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid #e9edf4;
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-controls select,
+        .header-controls input,
+        .header-controls button {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid #d1d9e6;
+            font-size: 14px;
+            background: #fff;
+            transition: 0.2s;
+        }
+        .header-controls button {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .header-controls button:hover {
+            background: #1d4ed8;
+        }
+        .header-controls button.danger {
+            background: #ef4444;
+        }
+        .header-controls button.danger:hover {
+            background: #dc2626;
+        }
+        .header-controls button.outline {
+            background: transparent;
+            color: #2563eb;
+            border: 1px solid #2563eb;
+        }
+        .header-controls button.outline:hover {
+            background: #eff6ff;
+        }
+
+        /* 统计卡片 */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            padding: 14px 18px;
+            border-radius: 14px;
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* 标签导航 */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid #e9edf4;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tabs button {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s;
+        }
+        .tabs button.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .tabs button:hover {
+            color: #0f172a;
+        }
+
+        /* 内容区域 */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 表格 */
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9edf4;
+        }
+        th {
+            background: #f1f5f9;
+            font-weight: 600;
+        }
+        .actions button {
+            margin-right: 6px;
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .actions .edit {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .actions .edit:hover {
+            background: #bfdbfe;
+        }
+        .actions .del {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .actions .del:hover {
+            background: #fecaca;
+        }
+        .actions .view {
+            background: #e6f7e6;
+            color: #166534;
+        }
+
+        /* 族谱树容器 */
+        #chartContainer {
+            width: 100%;
+            height: 600px;
+            background: #fafcff;
+            border-radius: 16px;
+            border: 1px solid #e9edf4;
+            margin-top: 8px;
+        }
+
+        /* 表单模态框 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 28px 32px;
+            max-width: 580px;
+            width: 94%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+        }
+        .modal h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .modal .field {
+            margin-bottom: 14px;
+        }
+        .modal .field label {
+            display: block;
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .modal .field input,
+        .modal .field select,
+        .modal .field textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d9e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .modal .field textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-actions button {
+            padding: 8px 22px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .modal-actions .cancel {
+            background: #e9edf4;
+            color: #1e293b;
+        }
+        .modal-actions .submit {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .query-result {
+            margin-top: 16px;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        .query-result ul {
+            list-style: none;
+            padding: 0;
+        }
+        .query-result li {
+            padding: 4px 0;
+            border-bottom: 1px solid #e9edf4;
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .header-controls {
+                flex-wrap: wrap;
+            }
+            #chartContainer {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>📜 纯族谱 · Pure Genealogy</h1>
+            <div class="header-controls">
+                <select id="familySelect"></select>
+                <button onclick="showCreateFamily()">+ 创建家族</button>
+                <button class="danger" onclick="deleteCurrentFamily()">删除家族</button>
+            </div>
+        </header>
+
+        <!-- 统计卡片 -->
+        <div class="stats" id="statsContainer">
+            <div class="stat-card"><div class="num" id="totalMembers">-</div><div class="label">总人数</div></div>
+            <div class="stat-card"><div class="num" id="totalGens">-</div><div class="label">世代数</div></div>
+            <div class="stat-card"><div class="num" id="genderMale">-</div><div class="label">男性</div></div>
+            <div class="stat-card"><div class="num" id="genderFemale">-</div><div class="label">女性</div></div>
+        </div>
+
+        <!-- 标签导航 -->
+        <div class="tabs">
+            <button class="active" data-tab="members">成员列表</button>
+            <button data-tab="tree">族谱树</button>
+            <button data-tab="statsDetail">统计 & 字辈</button>
+            <button data-tab="query">祖先/后代查询</button>
+        </div>
+
+        <!-- 成员列表 -->
+        <div class="tab-content active" id="tab-members">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+                <button onclick="showCreateMember()">➕ 添加成员</button>
+                <button class="outline" onclick="loadMembers()">🔄 刷新</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>姓名</th><th>性别</th><th>世代</th><th>出生</th><th>去世</th><th>操作</th></tr></thead>
+                    <tbody id="memberTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 族谱树 -->
+        <div class="tab-content" id="tab-tree">
+            <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+                <button onclick="renderTree()">🌳 渲染树图</button>
+                <span style="font-size:13px; color:#64748b;">点击节点可查看详情（控制台）</span>
+            </div>
+            <div id="chartContainer"></div>
+        </div>
+
+        <!-- 统计详情 & 字辈 -->
+        <div class="tab-content" id="tab-statsDetail">
+            <h3 style="margin-bottom:12px;">字辈列表</h3>
+            <div id="generationWordsContainer" style="margin-bottom:20px;"></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="number" id="genWordGen" placeholder="世代" style="width:100px;padding:6px 10px;border:1px solid #d1d9e6;border-radius:8px;" />
+                <input type="text" id="genWordWord" placeholder="字辈字" style="width:100px;padding:6px 10px;border:1px solid #d1d9e6;border-radius:8px;" />
+                <button onclick="setGenerationWord()">设置字辈</button>
+            </div>
+            <div style="margin-top:20px;">
+                <h3>其他统计</h3>
+                <div id="extraStats" style="background:#f8fafc;padding:16px;border-radius:12px;margin-top:8px;"></div>
+            </div>
+        </div>
+
+        <!-- 祖先/后代查询 -->
+        <div class="tab-content" id="tab-query">
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                <select id="queryMemberSelect" style="min-width:150px;padding:6px 10px;border:1px solid #d1d9e6;border-radius:8px;"></select>
+                <button onclick="queryAncestors()">🧬 查看祖先</button>
+                <button onclick="queryDescendants()">👶 查看后代</button>
+            </div>
+            <div id="queryResult" class="query-result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- 模态框（表单） -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2 id="modalTitle">添加成员</h2>
+            <form id="memberForm" onsubmit="submitMemberForm(event)">
+                <input type="hidden" id="editMemberId" />
+                <div class="field">
+                    <label>姓名 *</label>
+                    <input type="text" id="fName" required />
+                </div>
+                <div class="field">
+                    <label>性别</label>
+                    <select id="fGender"><option value="male">男</option><option value="female">女</option><option value="unknown">未知</option></select>
+                </div>
+                <div class="field">
+                    <label>世代</label>
+                    <input type="number" id="fGeneration" value="1" />
+                </div>
+                <div class="field">
+                    <label>出生年份</label>
+                    <input type="number" id="fBirthYear" />
+                </div>
+                <div class="field">
+                    <label>去世年份</label>
+                    <input type="number" id="fDeathYear" />
+                </div>
+                <div class="field">
+                    <label>父亲</label>
+                    <select id="fFatherId"><option value="">无</option></select>
+                </div>
+                <div class="field">
+                    <label>母亲</label>
+                    <select id="fMotherId"><option value="">无</option></select>
+                </div>
+                <div class="field">
+                    <label>配偶</label>
+                    <select id="fSpouseId"><option value="">无</option></select>
+                </div>
+                <div class="field">
+                    <label>生平简介</label>
+                    <textarea id="fBiography"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel" onclick="closeModal()">取消</button>
+                    <button type="submit" class="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const API_BASE = 'http://zupu.19860519.de5.net'; // 改为你的 API 域名
+        // ==============================================
+
+        let currentFamilyId = null;
+        let allMembers = [];
+        let chartInstance = null;
+
+        // ==================== 工具函数 ====================
+        function api(path, method = 'GET', body = null) {
+            const opts = {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+            };
+            if (body) opts.body = JSON.stringify(body);
+            return fetch(`${API_BASE}${path}`, opts)
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) throw new Error(res.error || '请求失败');
+                    return res.data;
+                });
+        }
+
+        function getVal(id) { return document.getElementById(id).value; }
+
+        function setVal(id, val) { document.getElementById(id).value = val ?? ''; }
+
+        function fillSelect(id, items, labelKey = 'name', valueKey = 'id', defaultLabel = '无') {
+            const sel = document.getElementById(id);
+            const current = sel.value;
+            sel.innerHTML = `<option value="">${defaultLabel}</option>`;
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item[valueKey];
+                opt.textContent = item[labelKey];
+                sel.appendChild(opt);
+            });
+            if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
+        }
+
+        function showToast(msg, isError = false) {
+            const div = document.createElement('div');
+            div.textContent = msg;
+            div.style.cssText = `
+                position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+                background:${isError ? '#dc2626' : '#16a34a'}; color:#fff;
+                padding:12px 28px; border-radius:60px; font-weight:500;
+                box-shadow:0 8px 30px rgba(0,0,0,0.2); z-index:9999;
+                transition: opacity 0.3s; opacity:0;
+            `;
+            document.body.appendChild(div);
+            requestAnimationFrame(() => { div.style.opacity = '1'; });
+            setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 400); }, 2500);
+        }
+
+        // ==================== 家族管理 ====================
+        async function loadFamilies() {
+            try {
+                const list = await api('/families');
+                const sel = document.getElementById('familySelect');
+                sel.innerHTML = '';
+                list.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.textContent = f.name;
+                    sel.appendChild(opt);
+                });
+                if (list.length > 0) {
+                    sel.value = currentFamilyId || list[0].id;
+                    currentFamilyId = sel.value;
+                    onFamilyChange();
+                } else {
+                    // 无家族，提示创建
+                    document.getElementById('statsContainer').innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">请先创建一个家族</div>';
+                    document.getElementById('memberTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;">暂无成员</td></tr>';
+                    document.getElementById('generationWordsContainer').innerHTML = '';
+                }
+            } catch (e) {
+                showToast('加载家族失败: ' + e.message, true);
+            }
+        }
+
+        async function onFamilyChange() {
+            currentFamilyId = document.getElementById('familySelect').value;
+            if (!currentFamilyId) return;
+            await loadMembers();
+            await loadStatistics();
+            await loadGenerationWords();
+            await loadMemberSelectForQuery();
+            // 如果当前在树标签，重新渲染
+            if (document.querySelector('[data-tab="tree"].active')) renderTree();
+        }
+
+        async function deleteCurrentFamily() {
+            if (!currentFamilyId) return;
+            if (!confirm('确定要删除该家族及所有成员吗？')) return;
+            try {
+                await api(`/families/${currentFamilyId}`, 'DELETE');
+                showToast('家族已删除');
+                await loadFamilies();
+            } catch (e) {
+                showToast('删除失败: ' + e.message, true);
+            }
+        }
+
+        function showCreateFamily() {
+            const name = prompt('请输入新家族名称：');
+            if (!name) return;
+            api('/families', 'POST', { name })
+                .then(() => {
+                    showToast('家族创建成功');
+                    loadFamilies();
+                })
+                .catch(e => showToast('创建失败: ' + e.message, true));
+        }
+
+        // ==================== 成员管理 ====================
+        async function loadMembers() {
+            if (!currentFamilyId) return;
+            try {
+                const res = await api(`/members?family_id=${currentFamilyId}&limit=1000`);
+                allMembers = res.data || [];
+                renderMemberTable();
+            } catch (e) {
+                showToast('加载成员失败: ' + e.message, true);
+            }
+        }
+
+        function renderMemberTable() {
+            const tbody = document.getElementById('memberTableBody');
+            if (!allMembers.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;">暂无成员</td></tr>';
+                return;
+            }
+            tbody.innerHTML = allMembers.map(m => `
+                <tr>
+                    <td><strong>${m.name}</strong></td>
+                    <td>${m.gender === 'male' ? '男' : m.gender === 'female' ? '女' : '未知'}</td>
+                    <td>${m.generation}</td>
+                    <td>${m.birth_year || '-'}</td>
+                    <td>${m.death_year || '-'}</td>
+                    <td class="actions">
+                        <button class="edit" onclick="editMember('${m.id}')">编辑</button>
+                        <button class="del" onclick="deleteMember('${m.id}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showCreateMember() {
+            if (!currentFamilyId) { showToast('请先选择家族', true); return; }
+            document.getElementById('modalTitle').textContent = '添加成员';
+            document.getElementById('editMemberId').value = '';
+            // 清空表单
+            ['fName', 'fGeneration', 'fBirthYear', 'fDeathYear', 'fBiography'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('fGender').value = 'male';
+            // 填充父/母/配偶下拉
+            fillMemberSelects();
+            openModal();
+        }
+
+        async function editMember(id) {
+            const member = allMembers.find(m => m.id === id);
+            if (!member) return;
+            document.getElementById('modalTitle').textContent = '编辑成员';
+            document.getElementById('editMemberId').value = id;
+            setVal('fName', member.name);
+            setVal('fGender', member.gender);
+            setVal('fGeneration', member.generation);
+            setVal('fBirthYear', member.birth_year);
+            setVal('fDeathYear', member.death_year);
+            setVal('fBiography', member.biography);
+            // 填充下拉并选中
+            fillMemberSelects();
+            setVal('fFatherId', member.father_id);
+            setVal('fMotherId', member.mother_id);
+            setVal('fSpouseId', member.spouse_id);
+            openModal();
+        }
+
+        function fillMemberSelects() {
+            const opts = allMembers.map(m => ({ id: m.id, name: m.name }));
+            fillSelect('fFatherId', opts);
+            fillSelect('fMotherId', opts);
+            fillSelect('fSpouseId', opts);
+        }
+
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        async function submitMemberForm(e) {
+            e.preventDefault();
+            const id = document.getElementById('editMemberId').value;
+            const payload = {
+                family_id: currentFamilyId,
+                name: getVal('fName'),
+                gender: getVal('fGender'),
+                generation: parseInt(getVal('fGeneration')) || 1,
+                birth_year: parseInt(getVal('fBirthYear')) || null,
+                death_year: parseInt(getVal('fDeathYear')) || null,
+                father_id: getVal('fFatherId') || null,
+                mother_id: getVal('fMotherId') || null,
+                spouse_id: getVal('fSpouseId') || null,
+                biography: getVal('fBiography') || null,
+            };
+            try {
+                if (id) {
+                    await api(`/members/${id}`, 'PUT', payload);
+                    showToast('成员更新成功');
+                } else {
+                    await api('/members', 'POST', payload);
+                    showToast('成员添加成功');
+                }
+                closeModal();
+                await loadMembers();
+                await loadStatistics();
+            } catch (e) {
+                showToast('操作失败: ' + e.message, true);
+            }
+        }
+
+        async function deleteMember(id) {
+            if (!confirm('确定删除该成员？')) return;
+            try {
+                await api(`/members/${id}`, 'DELETE');
+                showToast('已删除');
+                await loadMembers();
+                await loadStatistics();
+            } catch (e) {
+                showToast('删除失败: ' + e.message, true);
+            }
+        }
+
+        // ==================== 统计 & 字辈 ====================
+        async function loadStatistics() {
+            if (!currentFamilyId) return;
+            try {
+                const stats = await api(`/statistics/family/${currentFamilyId}`);
+                document.getElementById('totalMembers').textContent = stats.total_members || 0;
+                document.getElementById('totalGens').textContent = stats.total_generations || 0;
+                document.getElementById('genderMale').textContent = stats.gender_ratio?.male || 0;
+                document.getElementById('genderFemale').textContent = stats.gender_ratio?.female || 0;
+                // 额外统计
+                const extra = document.getElementById('extraStats');
+                if (stats.generation_distribution) {
+                    extra.innerHTML = `<strong>世代分布：</strong> ${stats.generation_distribution.map(g => `第${g.generation}代 ${g.count}人`).join('、')}`;
+                } else {
+                    extra.innerHTML = '暂无数据';
+                }
+            } catch (e) {
+                console.warn('统计加载失败', e);
+            }
+        }
+
+        async function loadGenerationWords() {
+            if (!currentFamilyId) return;
+            try {
+                const words = await api(`/statistics/family/${currentFamilyId}/generation-words`);
+                const container = document.getElementById('generationWordsContainer');
+                if (!words.length) {
+                    container.innerHTML = '<span style="color:#64748b;">暂未设置字辈</span>';
+                    return;
+                }
+                container.innerHTML = words.map(w => `<span style="display:inline-block;background:#e9edf4;padding:4px 12px;border-radius:20px;margin:4px;">第${w.generation}代 · ${w.word}</span>`).join(' ');
+            } catch (e) {
+                document.getElementById('generationWordsContainer').innerHTML = '<span style="color:#dc2626;">加载失败</span>';
+            }
+        }
+
+        async function setGenerationWord() {
+            const gen = parseInt(document.getElementById('genWordGen').value);
+            const word = document.getElementById('genWordWord').value.trim();
+            if (!gen || !word) { showToast('请填写完整', true); return; }
+            try {
+                await api(`/statistics/family/${currentFamilyId}/generation-words`, 'POST', { generation: gen, word });
+                showToast('字辈设置成功');
+                loadGenerationWords();
+            } catch (e) {
+                showToast('设置失败: ' + e.message, true);
+            }
+        }
+
+        // ==================== 族谱树 ====================
+        function renderTree() {
+            if (!currentFamilyId) return;
+            if (!allMembers.length) { showToast('暂无成员', true); return; }
+            // 构建树：找到根节点（无父节点），并建立 children
+            const map = {};
+            allMembers.forEach(m => { map[m.id] = { ...m, children: [] }; });
+            const roots = [];
+            allMembers.forEach(m => {
+                const node = map[m.id];
+                if (m.father_id && map[m.father_id]) {
+                    map[m.father_id].children.push(node);
+                } else if (m.mother_id && map[m.mother_id]) {
+                    map[m.mother_id].children.push(node);
+                } else {
+                    roots.push(node);
+                }
+            });
+            if (!roots.length) { showToast('无法构建树，请检查父子关系', true); return; }
+            // 取第一个根（或合并多个根？ECharts树支持多根，但展示更好是单根）
+            const root = roots.length === 1 ? roots[0] : { name: '家族始祖', children: roots };
+            const treeData = convertToEChartsTree(root);
+
+            const dom = document.getElementById('chartContainer');
+            if (!chartInstance) {
+                chartInstance = echarts.init(dom);
+                window.addEventListener('resize', () => chartInstance.resize());
+            }
+            chartInstance.setOption({
+                tooltip: { trigger: 'item', triggerOn: 'mousemove' },
+                series: [{
+                    type: 'tree',
+                    data: [treeData],
+                    top: '5%',
+                    left: '5%',
+                    bottom: '5%',
+                    right: '5%',
+                    symbolSize: 12,
+                    label: {
+                        position: 'left',
+                        verticalAlign: 'middle',
+                        align: 'right',
+                        fontSize: 13,
+                    },
+                    leaves: {
+                        label: {
+                            position: 'right',
+                            verticalAlign: 'middle',
+                            align: 'left',
+                        }
+                    },
+                    expandAndCollapse: true,
+                    animationDuration: 600,
+                    animationDurationUpdate: 400,
+                }]
+            });
+            chartInstance.on('click', function(params) {
+                if (params.data && params.data.id) {
+                    const member = allMembers.find(m => m.id === params.data.id);
+                    if (member) {
+                        alert(`姓名：${member.name}\n世代：${member.generation}\n性别：${member.gender}\n出生：${member.birth_year || '未知'}\n去世：${member.death_year || '未知'}`);
+                    }
+                }
+            });
+        }
+
+        function convertToEChartsTree(node) {
+            const result = {
+                name: node.name,
+                id: node.id,
+                children: node.children ? node.children.map(c => convertToEChartsTree(c)) : [],
+            };
+            if (!result.children.length) delete result.children;
+            return result;
+        }
+
+        // ==================== 祖先/后代查询 ====================
+        async function loadMemberSelectForQuery() {
+            const sel = document.getElementById('queryMemberSelect');
+            sel.innerHTML = '';
+            allMembers.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.name;
+                sel.appendChild(opt);
+            });
+        }
+
+        async function queryAncestors() {
+            const id = document.getElementById('queryMemberSelect').value;
+            if (!id) { showToast('请选择成员', true); return; }
+            try {
+                const data = await api(`/members/${id}/ancestors`);
+                showQueryResult('祖先列表', data);
+            } catch (e) {
+                showToast('查询失败: ' + e.message, true);
+            }
+        }
+
+        async function queryDescendants() {
+            const id = document.getElementById('queryMemberSelect').value;
+            if (!id) { showToast('请选择成员', true); return; }
+            try {
+                const data = await api(`/members/${id}/descendants`);
+                showQueryResult('后代列表', data);
+            } catch (e) {
+                showToast('查询失败: ' + e.message, true);
+            }
+        }
+
+        function showQueryResult(title, list) {
+            const div = document.getElementById('queryResult');
+            div.style.display = 'block';
+            if (!list || !list.length) {
+                div.innerHTML = `<strong>${title}</strong>：无结果`;
+                return;
+            }
+            div.innerHTML = `<strong>${title}</strong>（共${list.length}人）<ul>${list.map(m => `<li>${m.name}（${m.gender === 'male' ? '男' : '女'}，第${m.generation}代）</li>`).join('')}</ul>`;
+        }
+
+        // ==================== 标签切换 ====================
+        document.querySelectorAll('.tabs button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const tabName = this.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+                if (tabName === 'tree') renderTree();
+                if (tabName === 'query') loadMemberSelectForQuery();
+                if (tabName === 'statsDetail') loadGenerationWords();
+            });
+        });
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('familySelect').addEventListener('change', onFamilyChange);
+            await loadFamilies();
+        });
+
+        // 点击模态框外部关闭
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>
