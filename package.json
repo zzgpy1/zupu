@@ -1,0 +1,25 @@
+{
+  "name": "pure-genealogy-d1",
+  "version": "1.0.0",
+  "description": "Pure Genealogy System with Cloudflare D1",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create zupu",
+    "db:migrate": "wrangler d1 execute zupu --file=./schemas/schema.sql",
+    "db:remote": "wrangler d1 execute zupu --remote --file=./schemas/schema.sql",
+    "db:info": "wrangler d1 info zupu",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.6.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.95.0"
+  }
+}
