@@ -1,25 +1,49 @@
 {
-  "name": "pure-genealogy-d1",
-  "version": "1.0.0",
-  "description": "Pure Genealogy System with Cloudflare D1",
-  "type": "module",
+  "name": "pure-genealogy",
+  "version": "3.0.0",
+  "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "db:create": "wrangler d1 create zupu",
-    "db:migrate": "wrangler d1 execute zupu --file=./schemas/schema.sql",
-    "db:remote": "wrangler d1 execute zupu --remote --file=./schemas/schema.sql",
-    "db:info": "wrangler d1 info zupu",
-    "test": "vitest"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply zupu --local",
+    "db:migrate:remote": "wrangler d1 migrations apply zupu --remote",
+    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy",
+    "deploy:vercel": "vercel deploy"
   },
   "dependencies": {
-    "hono": "^4.6.0",
-    "zod": "^3.23.8"
+    "next": "15.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@better-auth/next": "^1.2.0",
+    "better-auth": "^1.2.0",
+    "drizzle-orm": "^0.38.0",
+    "@libsql/client": "^0.14.0",
+    "@opennextjs/cloudflare": "^0.5.0",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@xyflow/react": "^12.3.0",
+    "react-force-graph-3d": "^1.24.0",
+    "recharts": "^2.15.0",
+    "slate": "^0.112.0",
+    "slate-react": "^0.112.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "lucide-react": "^0.469.0",
+    "clsx": "^2.1.1",
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241218.0",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8",
-    "wrangler": "^3.95.0"
+    "@types/node": "^22.13.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "drizzle-kit": "^0.30.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.0.0",
+    "@opennextjs/cloudflare": "^0.5.0"
   }
 }
