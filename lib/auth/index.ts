@@ -9,9 +9,6 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  socialProviders: {
-    // 可选: GitHub, Google 等
-  },
   session: {
     cookieCache: {
       enabled: true,
@@ -23,20 +20,5 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
-  // 多租户支持：在 session 中存储用户 ID
-  callbacks: {
-    session: {
-      async onSuccess({ session, user }) {
-        return {
-          ...session,
-          user: {
-            ...session.user,
-            id: user.id,
-          },
-        };
-      },
-    },
-  },
+  // 可在此添加其他配置，如社交登录、回调等
 });
-
-export type Auth = typeof auth;
