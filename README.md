@@ -1,4 +1,4 @@
-# # 族谱系统 (Genealogy System)
+## 族谱系统 (Genealogy System)
 
 基于 Next.js 15 + Cloudflare D1 + R2 的家族族谱管理系统。
 
