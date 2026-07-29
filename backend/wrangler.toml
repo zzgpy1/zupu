@@ -8,4 +8,4 @@ database_name = "zupu"
 database_id = "6a0d57f5-0396-4356-aabc-ff1a1164db33"
 
 [vars]
-JWT_SECRET = "your-jwt-secret-change-in-production"
+JWT_SECRET = "34572c255730a607ace9dd06b44ea36538b557d3bdf2d9ca272e3727d945234b"
