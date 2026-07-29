@@ -1,0 +1,49 @@
+# .github/workflows/deploy.yml
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]  # 当推送到 main 分支时触发
+  workflow_dispatch:  # 允许在 GitHub 网页上手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # 或 'lts/*'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci  # 使用 npm ci 进行干净的、可复现的安装
+
+      - name: 构建项目
+        run: npm run pages:build  # 使用你的 package.json 中定义的构建脚本
+
+      # --- 关键步骤：运行 D1 数据库迁移 ---
+      # D1 数据库在 CI 环境中需要特殊处理[reference:8][reference:9]
+      - name: 应用 D1 数据库迁移
+        run: npx wrangler d1 migrations apply zupu --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # --- 关键步骤：部署到 Cloudflare Pages ---
+      - name: 部署到 Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3  # 官方推荐 Action[reference:10]
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy .vercel/output/static --project-name=你的Pages项目名 --branch=main
+        env:
+          # 为 wrangler 命令传递环境变量
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
