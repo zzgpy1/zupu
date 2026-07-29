@@ -2,8 +2,8 @@ name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [main]  # 当推送到 main 分支时触发
-  workflow_dispatch:  # 允许手动触发
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -21,11 +21,12 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
+        # 不使用 npm ci，避免 lock 文件同步问题
 
       - name: Build project
         run: npm run pages:build
-        # 这会生成 .vercel/output/static 目录
+        # 生成 .vercel/output/static
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -33,4 +34,3 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy .vercel/output/static --project-name=zupu --branch=main
-          # 请将 "你的Pages项目名称" 替换为你在 Cloudflare Pages 中创建的实际项目名称
