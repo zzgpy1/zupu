@@ -1,5 +1,6 @@
-import type { ApiResponse } from '../types';
 import type { Context } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';  // ← 导入状态码类型
+import type { ApiResponse } from '../types';
 
 export class ResponseUtil {
   static success<T>(c: Context, data: T, message?: string): Response {
@@ -8,10 +9,10 @@ export class ResponseUtil {
       data,
       message: message || '操作成功',
     };
-    return c.json(response);
+    return c.json(response, 200); // 200 是 ContentfulStatusCode
   }
 
-  static error(c: Context, error: string, status: number = 400): Response {
+  static error(c: Context, error: string, status: ContentfulStatusCode = 400): Response {
     const response: ApiResponse = {
       success: false,
       error,
