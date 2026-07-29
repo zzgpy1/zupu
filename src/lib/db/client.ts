@@ -1,15 +1,23 @@
 import { drizzle } from 'drizzle-orm/d1';
+import { drizzle as drizzleSQLite } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import Database from 'better-sqlite3';
 import * as schema from './schema';
 
 let cachedDb: ReturnType<typeof drizzle> | null = null;
 
 export function getDb() {
   if (cachedDb) return cachedDb;
-  // @ts-ignore - Cloudflare Pages 环境变量
+
   const dbBinding = process.env.DB;
-  if (!dbBinding) {
-    throw new Error('D1 binding (DB) not found. Please bind your D1 database.');
+  if (dbBinding) {
+    cachedDb = drizzle(dbBinding, { schema });
+  } else {
+    const sqlite = new Database('dev.db');
+    const db = drizzleSQLite(sqlite, { schema });
+    migrate(db, { migrationsFolder: './src/lib/db/migrations' });
+    cachedDb = db;
   }
-  cachedDb = drizzle(dbBinding, { schema });
+
   return cachedDb;
 }
