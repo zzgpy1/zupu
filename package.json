@@ -9,8 +9,7 @@
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply zupu --local",
-    "db:migrate:remote": "wrangler d1 migrations apply zupu --remote",
-    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy"
+    "db:migrate:remote": "wrangler d1 migrations apply zupu --remote"
   },
   "dependencies": {
     "next": "15.2.0",
@@ -41,12 +40,7 @@
     "drizzle-kit": "^0.31.4",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
-    "wrangler": "^4.115.0",
-    "@opennextjs/cloudflare": "^0.5.16",
-    "@cloudflare/workers-types": "^5.20260722.1"
-  },
-  "overrides": {
-    "@opennextjs/aws": "3.0.0"
+    "wrangler": "^4.115.0"
   },
   "engines": {
     "node": ">=22.0.0"
