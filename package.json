@@ -1,6 +1,6 @@
 {
   "name": "pure-genealogy",
-  "version": ".0.0",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -42,8 +42,11 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
     "wrangler": "^4.115.0",
-    "@opennextjs/cloudflare": "^0.5.0",
+    "@opennextjs/cloudflare": "0.5.14",
     "@cloudflare/workers-types": "^5.20260722.1"
+  },
+  "overrides": {
+    "@opennextjs/aws": "3.0.0"
   },
   "engines": {
     "node": ">=22.0.0"
