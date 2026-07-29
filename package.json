@@ -10,16 +10,14 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply zupu --local",
     "db:migrate:remote": "wrangler d1 migrations apply zupu --remote",
-    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy",
-    "deploy:vercel": "vercel deploy"
+    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy"
   },
   "dependencies": {
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@better-auth/next": "^1.2.0",
-    "better-auth": "^1.2.0",
-    "drizzle-orm": "^0.38.0",
+    "better-auth": "^1.6.25",
+    "drizzle-orm": "^0.45.2",
     "@libsql/client": "^0.14.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
@@ -40,12 +38,12 @@
     "@types/node": "^22.13.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "drizzle-kit": "^0.30.0",
+    "drizzle-kit": "^0.31.4",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
-    "wrangler": "^4.3.0",
+    "wrangler": "^4.115.0",
     "@opennextjs/cloudflare": "^0.5.16",
-    "@cloudflare/workers-types": "^4.20240208.0"
+    "@cloudflare/workers-types": "^5.20260722.1"
   },
   "engines": {
     "node": ">=22.0.0"
