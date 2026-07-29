@@ -21,12 +21,11 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
-        # 不使用 npm ci，避免 lock 文件同步问题
+        run: npm install --legacy-peer-deps --omit=optional
+        # 跳过可选依赖（better-sqlite3），避免编译失败
 
       - name: Build project
         run: npm run pages:build
-        # 生成 .vercel/output/static
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
