@@ -1,0 +1,11 @@
+name = "pure-genealogy-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "zupu"
+database_id = "6a0d57f5-0396-4356-aabc-ff1a1164db33"
+
+[vars]
+JWT_SECRET = "your-jwt-secret-change-in-production"
