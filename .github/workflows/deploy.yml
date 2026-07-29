@@ -15,11 +15,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'           # 使用 LTS 版本，消除弃用警告
+          node-version: '22'
           cache: 'npm'
 
+      # 优先使用 npm ci（有锁文件），否则回退到 npm install
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps   # 现在 package-lock.json 存在，但仍加上 --legacy-peer-deps 确保通过
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --legacy-peer-deps
+          else
+            npm install --legacy-peer-deps
+          fi
 
       - name: Generate D1 migrations
         run: npm run db:generate
