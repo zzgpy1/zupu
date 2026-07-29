@@ -7,6 +7,9 @@ export type Env = {
 };
 
 export function createDb(env: Env) {
+  if (!env.DB) {
+    throw new Error("D1 database binding 'DB' is not available");
+  }
   return drizzle(env.DB, { schema });
 }
 
