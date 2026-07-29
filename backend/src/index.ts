@@ -13,9 +13,28 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// CORS
+// 全局错误处理（关键：捕获所有未处理异常，返回详细错误）
+app.onError((err, c) => {
+  console.error("❌ Global error:", err);
+  return c.json(
+    {
+      error: err.message || "Internal Server Error",
+      stack: err.stack, // 开发时保留，生产可移除
+    },
+    500
+  );
+});
+
+// CORS - 动态允许来源
 app.use("*", cors({
-  origin: ["http://localhost:5173", "https://your-frontend-domain.com"],
+  origin: (origin) => {
+    const allowed = [
+      "http://localhost:5173",
+      "https://your-frontend-domain.com", // 替换为您的实际前端域名
+    ];
+    if (!origin || allowed.includes(origin)) return origin;
+    return null;
+  },
   credentials: true,
 }));
 
