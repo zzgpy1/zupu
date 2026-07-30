@@ -1,42 +1,51 @@
+// frontend/worker.js
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const pathname = url.pathname;
+    const path = url.pathname;
 
-    // 如果是根路径，返回 index.html（确保 SPA 路由支持）
-    if (pathname === '/' || pathname === '') {
-      return await serveStatic('index.html', env);
+    // 处理根路径和 SPA 路由：返回 index.html
+    if (path === '/' || path === '') {
+      return serveStatic('index.html', env);
     }
 
-    // 尝试从 assets 中获取静态文件
-    const assetResponse = await env.ASSETS.fetch(request.clone());
-    
-    // 如果资源不存在（404），返回 index.html（支持 SPA 路由）
-    if (assetResponse.status === 404) {
-      return await serveStatic('index.html', env);
+    // 尝试获取静态文件
+    let response = await env.ASSETS.fetch(request);
+
+    // 如果资源不存在（例如 SPA 路由），同样返回 index.html
+    if (response.status === 404) {
+      return serveStatic('index.html', env);
     }
 
-    // 对 .js 文件强制设置正确的 MIME 类型
-    const response = new Response(assetResponse.body, assetResponse);
-    if (pathname.endsWith('.js')) {
-      response.headers.set('Content-Type', 'application/javascript');
-    } else if (pathname.endsWith('.css')) {
-      response.headers.set('Content-Type', 'text/css');
+    // 强制修正 MIME 类型（核心修复）
+    const contentType = getContentType(path);
+    if (contentType) {
+      response = new Response(response.body, response);
+      response.headers.set('Content-Type', contentType);
     }
-    // 可添加其他类型支持
+
     return response;
   },
 };
 
 async function serveStatic(file, env) {
-  const assetRequest = new Request(`https://fake-host/${file}`);
-  const assetResponse = await env.ASSETS.fetch(assetRequest);
-  const response = new Response(assetResponse.body, assetResponse);
-  // 如果文件是 js/css，同样设置 MIME
-  if (file.endsWith('.js')) {
-    response.headers.set('Content-Type', 'application/javascript');
-  } else if (file.endsWith('.css')) {
-    response.headers.set('Content-Type', 'text/css');
+  const fakeRequest = new Request(`https://fake-host/${file}`);
+  const response = await env.ASSETS.fetch(fakeRequest);
+  const contentType = getContentType(file);
+  if (contentType) {
+    const newResponse = new Response(response.body, response);
+    newResponse.headers.set('Content-Type', contentType);
+    return newResponse;
   }
   return response;
+}
+
+function getContentType(path) {
+  if (path.endsWith('.js')) return 'application/javascript';
+  if (path.endsWith('.css')) return 'text/css';
+  if (path.endsWith('.html')) return 'text/html';
+  if (path.endsWith('.svg')) return 'image/svg+xml';
+  if (path.endsWith('.png')) return 'image/png';
+  if (path.endsWith('.ico')) return 'image/x-icon';
+  return null;
 }
