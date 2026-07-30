@@ -41,18 +41,34 @@ app.onError((err, c) => {
 app.use(
   "*",
   cors({
-    origin: (origin) => {
+    origin: (origin, c) => {
+      // 定义允许的域名白名单（必须包含完整协议）
       const allowed = [
-        "http://localhost:5173",          // 本地开发
-        "https://zupu.19860519.xyz",      // 你的自定义域名
-        "pure-genealogy-api.173385250.workers.dev", // Cloudflare Pages 默认域名（如有）
+        "http://localhost:5173",
+        "https://zupu.19860519.xyz",
+        "https://pure-genealogy-api.173385250.workers.dev", // 补全 https://
+        // 如需允许前端 Worker 的默认域名，也一并加入
+        "https://zupu-main.173385250.workers.dev",
       ];
-      // 如果 origin 为空（如 Postman 或 curl），允许
-      if (!origin) return "*";
-      if (allowed.includes(origin)) return origin;
-      return null; // 拒绝其他来源
+
+      // 如果请求没有 Origin 头（如 Postman/curl），直接拒绝
+      if (!origin) {
+        return null;
+      }
+
+      // 检查 Origin 是否在白名单中
+      if (allowed.includes(origin)) {
+        return origin;
+      }
+
+      // 不在白名单中，拒绝
+      return null;
     },
     credentials: true,
+    // 可选：明确指定允许的请求方法
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    // 可选：允许前端携带的请求头
+    allowHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
