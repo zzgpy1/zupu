@@ -13,67 +13,48 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// ============================================================
-// 1. 健康检查（用于快速验证 Worker 是否运行）
-// ============================================================
-app.get("/", (c) => {
-  return c.text("✅ pure-genealogy API is running! Use /api/* endpoints.");
-});
+// 健康检查
+app.get("/", (c) => c.text("✅ pure-genealogy API is running! Use /api/* endpoints."));
 
-// ============================================================
-// 2. 全局错误处理
-// ============================================================
+// 全局错误处理
 app.onError((err, c) => {
   console.error("❌ Global error:", err);
   return c.json(
     {
       error: err.message || "Internal Server Error",
-      stack: err.stack, // 生产环境可移除
+      stack: err.stack,
     },
     500
   );
 });
 
-// ============================================================
-// 3. CORS 配置（明确允许前端域名）
-// ============================================================
+// CORS 配置 - 动态允许
 app.use(
   "*",
   cors({
     origin: (origin) => {
-      // 白名单：包含所有可能的前端来源
       const allowed = [
-        "http://localhost:5173",                         // 本地开发
-        "https://zupu.19860519.xyz",                    // 你的自定义域名
-        "https://zupu-main.173385250.workers.dev",      // 前端 Worker 默认域名
+        "http://localhost:5173",                    // 本地开发
+        "http://localhost:8787",                    // 后端本地
+        "https://zupu-main.173385250.workers.dev",  // 前端 Worker 域名
+        "https://pure-genealogy.pages.dev",         // Pages 默认域名
+        "https://zupu.19860519.xyz",                // 自定义域名
       ];
-      // 如果请求没有 Origin 头（如 Postman/curl），拒绝
-      if (!origin) return null;
-      // 检查是否在白名单中
+      if (!origin) return "*"; // 允许无来源请求（如 curl）
       if (allowed.includes(origin)) return origin;
-      // 不在白名单，拒绝
-      return null;
+      return null; // 拒绝其他来源
     },
     credentials: true,
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
-// ============================================================
-// 4. 公开路由（无需认证）
-// ============================================================
+// 公开路由
 app.route("/api/auth", auth);
 
-// ============================================================
-// 5. 受保护路由（需要 JWT 认证）
-// ============================================================
+// 受保护路由
 app.use("/api/*", authMiddleware);
 app.route("/api/members", members);
 app.route("/api/stats", stats);
 app.route("/api/settings", settings);
 
-// ============================================================
-// 6. 导出应用
-// ============================================================
 export default app;
