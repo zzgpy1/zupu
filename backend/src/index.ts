@@ -46,7 +46,7 @@ app.use(
       const allowed = [
         "http://localhost:5173",
         "https://zupu.19860519.xyz",
-        "https://pure-genealogy-api.173385250.workers.dev", // 补全 https://
+        "https://pure-genealogy-api.173385250.workers.dev", 
         // 如需允许前端 Worker 的默认域名，也一并加入
         "https://zupu-main.173385250.workers.dev",
       ];
