@@ -2,7 +2,7 @@ name: Deploy to Cloudflare Workers
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]          # ✅ 改为 master
   workflow_dispatch:
 
 env:
