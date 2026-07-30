@@ -1,5 +1,6 @@
-name = "pure-genealogy-frontend"
+name = "zupu-main"
 compatibility_date = "2024-12-16"
 
-# 静态资源目录（构建产物）
-assets = { directory = "./dist", binding = "ASSETS" }
+[assets]
+directory = "./dist"
+fallback = "index.html"
