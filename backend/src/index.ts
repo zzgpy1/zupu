@@ -30,7 +30,7 @@ app.use("*", cors({
   origin: (origin) => {
     const allowed = [
       "http://localhost:5173",
-      "https://your-frontend-domain.com", // 替换为您的实际前端域名
+      "https://zupu.19860519.xyz", // 替换为您的实际前端域名
     ];
     if (!origin || allowed.includes(origin)) return origin;
     return null;
