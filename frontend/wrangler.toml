@@ -1,0 +1,5 @@
+name = "pure-genealogy-frontend"
+compatibility_date = "2024-12-16"
+
+# 静态资源目录（构建产物）
+assets = { directory = "./dist", binding = "ASSETS" }

@@ -45,7 +45,7 @@ app.use(
       const allowed = [
         "http://localhost:5173",          // 本地开发
         "https://zupu.19860519.xyz",      // 你的自定义域名
-        "https://pure-genealogy.pages.dev", // Cloudflare Pages 默认域名（如有）
+        "pure-genealogy-api.173385250.workers.dev", // Cloudflare Pages 默认域名（如有）
       ];
       // 如果 origin 为空（如 Postman 或 curl），允许
       if (!origin) return "*";
