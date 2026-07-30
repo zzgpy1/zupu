@@ -1,0 +1,22 @@
+{
+  "name": "pure-genealogy-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply zupu --remote",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "hono": "^4.6.0",
+    "drizzle-orm": "^0.36.0",
+    "drizzle-kit": "^0.25.0",
+    "jose": "^5.9.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "wrangler": "^3.95.0",
+    "typescript": "^5.7.0"
+  }
+}
